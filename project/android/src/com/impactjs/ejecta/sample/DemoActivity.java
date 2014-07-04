@@ -44,9 +44,10 @@ public class DemoActivity extends Activity {
 	}
 
 	static {
-    	//System.loadLibrary("corefoundation");
-    	System.loadLibrary("JavaScriptCore");
-        System.loadLibrary("ejecta");
-    }
-	   
+		//System.loadLibrary("corefoundation");
+		// System.loadLibrary("JavaScriptCore");
+		// System.loadLibrary("ejecta");
+		System.loadLibrary("v8");
+	}
+
 }

@@ -1,22 +1,23 @@
-# Copyright (C) 2009 The Android Open Source Project
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 LOCAL_PATH := $(call my-dir)
+ANDROID_NDK_ROOT := /Users/Ally/Documents/android-ndk-r9d
 
+V8Libraries = $(LOCAL_PATH)/libraries/v8/libs/libv8_base.a
+V8Libraries += $(LOCAL_PATH)/libraries/v8/libs/libv8_libbase.a
+V8Libraries += $(LOCAL_PATH)/libraries/v8/libs/libv8_snapshot.a
+
+V8Libraries += $(LOCAL_PATH)/libraries/icu/libs/libicui18n.a
+V8Libraries += $(LOCAL_PATH)/libraries/icu/libs/libicuuc.a
+V8Libraries += $(LOCAL_PATH)/libraries/icu/libs/libicudata.a
+
+STLPath := $(ANDROID_NDK_ROOT)/sources/cxx-stl/stlport
+STLHeaders := $(STLPath)/stlport
+STLLibrary := $(STLPath)/libs/armeabi-v7a/libstlport_static.a
+
+# project code import
 include $(CLEAR_VARS)
+LOCAL_LDLIBS := -llog -lc
 
-LOCAL_MODULE    := ejecta
+LOCAL_MODULE    	:= libv8
 
 LOCAL_CFLAGS += -DENABLE_SINGLE_THREADED=1 -DUSE_FILE32API -D__LINUX__=1 -DCOMPATIBLE_GCC4=1 -D__LITTLE_ENDIAN__=1 -DGL_GLEXT_PROTOTYPES=1 -DEJECTA_DEBUG=1
 
@@ -40,9 +41,6 @@ LOCAL_C_INCLUDES := \
                     $(LOCAL_PATH)/libraries/android/JavaScriptCore/include 
 
 LOCAL_SRC_FILES := \
-                    source/lib/lodefreetype/lodefreetype.cpp \
-                    source/lib/lodepng/lodepng.cpp \
-                    source/lib/lodejpeg/lodejpeg.cpp \
                     source/ejecta/EJCocoa/support/nsCArray.cpp \
                     source/ejecta/EJCocoa/NSObject.cpp \
                     source/ejecta/EJCocoa/NSObjectFactory.cpp \
@@ -80,13 +78,11 @@ LOCAL_SRC_FILES := \
                     source/ejecta/EJUtils/EJBindingLocalStorage.cpp \
                     source/ejecta/EJUtils/EJBindingTouchInput.cpp \
                     ejecta.cpp \
+                    
+LOCAL_CFLAGS 		+= -Wall -Wno-unused-function -Wno-unused-variable -fpermissive -Wno-psabi
+LOCAL_CPPFLAGS 		+= -ldl -lstdc++ -llog -lgcc -licudata
 
-LOCAL_LDLIBS :=  -landroid -lz -llog -lGLESv2 -lGLESv1_CM \
-                    -L$(LOCAL_PATH)/libraries/android/libfreetype/libs/$(TARGET_ARCH_ABI) -lfreetype \
-                    -L$(LOCAL_PATH)/libraries/android/libpng/libs/$(TARGET_ARCH_ABI) -lpng \
-                    -L$(LOCAL_PATH)/libraries/android/libjpeg/libs/$(TARGET_ARCH_ABI) -ljpeg \
-                    -L$(LOCAL_PATH)/libraries/android/libcurl/libs/$(TARGET_ARCH_ABI) -lcurl \
+LOCAL_LDLIBS += $(V8Libraries) $(STLLibrary) -ldl -lstdc++ -llog -lgcc -landroid -lz -lGLESv2 -lGLESv1_CM
 
-LOCAL_SHARED_LIBRARIES := libJavaScriptCore
-LOCAL_STATIC_LIBRARIES := libv8
-include $(BUILD_SHARED_LIBRARY)
+#LOCAL_STATIC_LIBRARIES := v8_base v8_libbase v8_snapshot icui18n icuuc icudata $(STLLibrary)
+include $(BUILD_SHARED_LIBRARY)  

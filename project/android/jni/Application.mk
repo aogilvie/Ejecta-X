@@ -6,4 +6,4 @@ APP_PLATFORM := android-14
 
 # not compile corefundation library for android.
 # corefoundation
-APP_MODULES := JavaScriptCore ejecta 
+APP_MODULES := JavaScriptCore ejecta v8
