@@ -22,7 +22,7 @@ void NSValue::releaseValue() {
 	if (m_value) {
 		switch(m_type) {
 			case kJSClassRef:
-				JSClassRelease((JSClassRef)m_value);
+				// JSClassRelease((JSClassRef)m_value);
 				break;
 			case kJSObjectRef:
 				m_value = 0;

@@ -5,7 +5,8 @@
 #ifndef __NS_VALUE_H__
 #define __NS_VALUE_H__
 
-#include <JavaScriptCore/JavaScriptCore.h>
+// #include <JavaScriptCore/JavaScriptCore.h>
+#include <v8.h>
 
 #include "support/NSPlatformMacros.h"
 #include "NSObject.h"

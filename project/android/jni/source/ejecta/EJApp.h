@@ -1,6 +1,6 @@
 /****************************************************************************
 
-****************************************************************************/
+ ****************************************************************************/
 
 #ifndef __EJ_APP_H__
 #define __EJ_APP_H__
@@ -18,7 +18,8 @@
 
 #include <string>
 #include <set>
-#include <JavaScriptCore/JavaScriptCore.h>
+#include <v8.h>
+// #include <JavaScriptCore/JavaScriptCore.h>
 
 #include "EJCocoa/support/nsMacros.h"
 #include "EJCocoa/NSDictionary.h"
@@ -32,6 +33,7 @@
 #include <android/asset_manager.h>
 
 using namespace std;
+using namespace v8;
 
 #define EJECTA_VERSION "0.8.0"
 #define EJECTA_APP_FOLDER "www/"
@@ -47,62 +49,65 @@ class EJBindingTouchInput;
 class EJApp : public NSObject {
 
 private:
-    BOOL paused;
+	BOOL paused;
 
-    JavaVM *jvm;
-    jobject g_obj;
+	JavaVM *jvm;
+	jobject g_obj;
 
-    NSDictionary *jsClasses;
-    EJTimerCollection *timers;
-    long currentTime;
-    EJSharedOpenGLContext *openGLContext;
-    static EJApp *ejectaInstance;
+	NSDictionary *jsClasses;
+	EJTimerCollection *timers;
+	long currentTime;
+	EJSharedOpenGLContext *openGLContext;
+	static EJApp *ejectaInstance;
 
-    bool doesFileExist(const char *filename);
+	bool doesFileExist(const char *filename);
 
 public:
-    jobject assetManager;
-    BOOL landscapeMode;
-    JSGlobalContextRef jsGlobalContext;
-    int height, width;
-    AAssetManager *aassetManager;
-    char *dataBundle;
-    EJBindingTouchInput *touchDelegate;
-    EJCanvasContext *currentRenderingContext;
-    EJCanvasContextScreen *screenRenderingContext;
-    float internalScaling;
-    BOOL lockTouches;
-    NSArray *touches;
+	jobject assetManager;
+	BOOL landscapeMode;
+	Handle<Context> jsGlobalContext;
+	Isolate *jsGlobalIsolate;
+	// JSGlobalContextRef jsGlobalContext;
+	int height, width;
+	AAssetManager *aassetManager;
+	char *dataBundle;
+	EJBindingTouchInput *touchDelegate;
+	EJCanvasContext *currentRenderingContext;
+	EJCanvasContextScreen *screenRenderingContext;
+	float internalScaling;
+	BOOL lockTouches;
+	NSArray *touches;
 
-    EJApp(void);
-    ~EJApp(void);
+	EJApp(void);
+	~EJApp(void);
 
-    void init(JNIEnv *env, jobject jobj, jobject assetManager, const char *path, int w, int h);
-    void setScreenSize(int w, int h);
-    void run(void);
-    void pause(void);
-    void resume(void);
-    void clearCaches(void);
-    NSString * pathForResource(NSString * resourcePath);
-    JSValueRef createTimer(JSContextRef ctx, size_t argc, const JSValueRef argv[], BOOL repeat);
-    JSValueRef deleteTimer(JSContextRef ctx, size_t argc, const JSValueRef argv[]);
+	void init(JNIEnv *env, jobject jobj, jobject assetManager, const char *path, int w, int h);
+	void setScreenSize(int w, int h);
+	void run(void);
+	void pause(void);
+	void resume(void);
+	void clearCaches(void);
+	NSString * pathForResource(NSString * resourcePath);
+	JSValueRef createTimer(JSContextRef ctx, size_t argc, const JSValueRef argv[], BOOL repeat);
+	JSValueRef deleteTimer(JSContextRef ctx, size_t argc, const JSValueRef argv[]);
 
-    JSClassRef getJSClassForClass(EJBindingBase* classId);
-    void hideLoadingScreen(void);
-    void loadJavaScriptFile(const char *filename);
-    void loadScriptAtPath(NSString *path);
-    JSValueRef loadModuleWithId(NSString * moduleId, JSValueRef module, JSValueRef exports);
-    JSValueRef invokeCallback(JSObjectRef callback, JSObjectRef thisObject, size_t argc, const JSValueRef argv[]);
-    void logException(JSValueRef exception, JSContextRef ctxp);
+	// JSClassRef getJSClassForClass(EJBindingBase* classId);
+	Handle<FunctionTemplate> getJSClassForClass(EJBindingBase* classId);
+	void hideLoadingScreen(void);
+	void loadJavaScriptFile(const char *filename);
+	void loadScriptAtPath(NSString *path);
+	// JSValueRef loadModuleWithId(NSString * moduleId, JSValueRef module, JSValueRef exports);
+	JSValueRef invokeCallback(JSObjectRef callback, JSObjectRef thisObject, size_t argc, const JSValueRef argv[]);
+	void logException(JSValueRef exception, JSContextRef ctxp);
 
-    void touchesBegan(int x, int y);
-    void touchesEnded(int x, int y);
-    void touchesCancelled(int x, int y);
-    void touchesMoved(int x, int y);
+	void touchesBegan(int x, int y);
+	void touchesEnded(int x, int y);
+	void touchesCancelled(int x, int y);
+	void touchesMoved(int x, int y);
 
-    static EJApp* instance();
-    static void finalize();
-    void setCurrentRenderingContext(EJCanvasContext * renderingContext);
+	static EJApp* instance();
+	static void finalize();
+	void setCurrentRenderingContext(EJCanvasContext * renderingContext);
 
 	EJSharedOpenGLContext *getOpenGLContext() const { return openGLContext; }
 
