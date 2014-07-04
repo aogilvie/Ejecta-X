@@ -1,6 +1,3 @@
-#ifndef __EJ_EXCEPTION_H__
-#define __EJ_EXCEPTION_H__
-
 #include <v8.h>
 #include "EJCocoa/NSObject.h"
 #include <string>
