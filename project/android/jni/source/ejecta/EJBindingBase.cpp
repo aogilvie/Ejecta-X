@@ -33,7 +33,8 @@ EJBindingBase::~EJBindingBase()
 
 }
 
-void EJBindingBase::initWithContext(JSContextRef ctxp, JSObjectRef obj, size_t argc, const JSValueRef argv[]) {
+// void EJBindingBase::initWithContext(JSContextRef ctxp, JSObjectRef obj, size_t argc, const JSValueRef argv[]) {
+void EJBindingBase::initWithContext(Handle<context> jsGlobalContext, const FunctionCallbackInfo<Value>& args) {
 	jsObject = obj;
 }
 

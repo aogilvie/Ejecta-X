@@ -25,12 +25,11 @@ void EJTimerCollection::unlock()
 	simpleMutex = false;
 }
 
-
-int EJTimerCollection::scheduleCallback(JSObjectRef callback, float interval, BOOL repeat)
-{
+// int EJTimerCollection::scheduleCallback(JSObjectRef callback, float interval, BOOL repeat)
+int EJTimerCollection::scheduleCallback(Handle<Object> callback, float interval, BOOL repeat) {
 	lastId++;
 	
-	EJTimer * timer = new EJTimer(callback, interval, repeat);
+	EJTimer *timer = new EJTimer(callback, interval, repeat);
 	timers->setObject(timer, lastId);
 	timer->release();
 

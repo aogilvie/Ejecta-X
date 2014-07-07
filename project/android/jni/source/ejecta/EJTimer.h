@@ -19,7 +19,8 @@ public:
 	EJTimerCollection();
 	~EJTimerCollection();
 
-	int scheduleCallback(JSObjectRef callback, float interval, BOOL repeat);
+	// int scheduleCallback(JSObjectRef callback, float interval, BOOL repeat);
+	int scheduleCallback(Handle<Object> callback, float interval, BOOL repeat);
 	void cancelId(int timerId);
 	void update();
 };
@@ -34,7 +35,8 @@ class EJTimer : public NSObject
 public:
 	BOOL active;
 	EJTimer();
-	EJTimer(JSObjectRef callbackp, float intervalp, BOOL repeatp);
+	// EJTimer(JSObjectRef callbackp, float intervalp, BOOL repeatp);
+	EJTimer(Handle<Object> callbackp, float intervalp, BOOL repeatp);
 	~EJTimer();
 
 	void check();

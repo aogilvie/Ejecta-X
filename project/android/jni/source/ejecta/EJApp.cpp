@@ -17,9 +17,12 @@
 
 using namespace v8;
 
-JSValueRef ej_global_undefined;
+
+// JSValueRef ej_global_undefined;
 // JSClassRef ej_constructorClass;
 Handle<FunctionTemplate> tephra_constructorClass;
+
+void Tephra(const FunctionCallbackInfo<Value>& args);
 
 // JSValueRef ej_getNativeClass(JSContextRef ctx, JSObjectRef object, JSStringRef propertyNameJS, JSValueRef* exception) {
 Handle<Object> tephra_getNativeClass(JSContextRef ctx, JSObjectRef object, JSStringRef propertyNameJS, JSValueRef* exception) {
@@ -53,27 +56,30 @@ Handle<Object> tephra_getNativeClass(JSContextRef ctx, JSObjectRef object, JSStr
 
 	free(className);
 	fullClassName->autorelease();
-	return obj; // ? obj : ej_global_undefined;
+
+	return obj;
 }
 
-JSObjectRef ej_callAsConstructor(JSContextRef ctx, JSObjectRef constructor, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
+// Ejecta contructor
+// JSObjectRef ej_callAsConstructor(JSContextRef ctx, JSObjectRef constructor, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
+Handle<Value> Ejecta(const FunctionCallbackInfo<Value>& args) {
 
 	EJBindingBase *pClass = (EJBindingBase *)(JSObjectGetPrivate(constructor));
 
 	JSClassRef jsClass = EJApp::instance()->getJSClassForClass(pClass);
 
-	Local<Object> obj(jsGlobalContext->Global() );
-	JSObjectRef obj = JSObjectMake( ctx, jsClass, NULL );
+	Local<Object> obj(EJApp::jsGlobalContext->Global() );
+	// JSObjectRef obj = JSObjectMake( ctx, jsClass, NULL );
 
 	EJBindingBase* instance = (EJBindingBase*)NSClassFromString(pClass->toString().c_str());
-	instance->initWithContext(ctx, obj, argc, argv);
 
-	JSObjectSetPrivate( obj, (void *)instance );
+	// instance->initWithContext(ctx, obj, argc, argv);
+	instance->initWithContext(EJApp::jsGlobalContext, args);
+
+	// JSObjectSetPrivate( obj, (void *)instance );
 
 	return obj;
 }
-
-
 
 
 // ---------------------------------------------------------------------------------
@@ -141,10 +147,10 @@ EJApp::EJApp() : currentRenderingContext(0), screenRenderingContext(0), touchDel
 	 */
 
 	// Create function template for our constructor
-	Handle<FunctionTemplate> tephra_constructorClass = FunctionTemplate::New(jsGlobalIsolate);
+	// Handle<FunctionTemplate> tephra_constructorClass = FunctionTemplate::New(jsGlobalIsolate);
 
 	// Get ejecta's instance template
-	Handle<ObjectTemplate> tephra_instance_template = tephra_constructorClass->InstanceTemplate();
+	// Handle<ObjectTemplate> tephra_instance_template = tephra_constructorClass->InstanceTemplate();
 
 	/*
 		JSObjectRef iosObject = JSObjectMake( jsGlobalContext, globalClass, NULL );
@@ -155,8 +161,13 @@ EJApp::EJApp() : currentRenderingContext(0), screenRenderingContext(0), touchDel
 		);
 	 */
 
-	Handle<Object> global(jsGlobalContext->Global());
-	global->Set(String::NewFromUtf8(jsGlobalIsolate, "Ejecta"), tephra_constructorClass->GetFunction());
+	Handle<ObjectTemplate> global = ObjectTemplate::New(jsGlobalIsolate);
+
+	// Set Function Ejecta on global object
+	global->Set(String::NewFromUtf8(jsGlobalIsolate, "Ejecta"), FunctionTemplate::New(jsGlobalIsolate, Tephra));
+
+	// Give this global a context
+	Context::New(jsGlobalIsolate, NULL, global);
 
 	// Create the OpenGL ES2 Context
 	// Android init GLView on java framework
@@ -166,8 +177,7 @@ EJApp::EJApp() : currentRenderingContext(0), screenRenderingContext(0), touchDel
 	}
 }
 
-EJApp::~EJApp()
-{
+EJApp::~EJApp() {
 	pause();
 	EJHttpClient::destroyInstance();
 	//JSGlobalContextRelease(jsGlobalContext);
@@ -188,8 +198,7 @@ EJApp::~EJApp()
 	NSPoolManager::purgePoolManager();
 }
 
-void EJApp::init(JNIEnv *env, jobject jobj, jobject assetManager, const char* path, int w, int h)
-{
+void EJApp::init(JNIEnv *env, jobject jobj, jobject assetManager, const char* path, int w, int h) {
 	env->GetJavaVM(&jvm);
 
 	g_obj = jobj;
@@ -466,12 +475,17 @@ Handle<Value> EJApp::loadModuleWithId(NSString *moduleId, JSValueRef module, JSV
 }
  */
 
-// TODO:
-JSValueRef EJApp::invokeCallback(JSObjectRef callback, JSObjectRef thisObject, size_t argc, const JSValueRef argv[]) {
-	JSValueRef exception = NULL;
-	JSValueRef result = NULL;
+// JSValueRef EJApp::invokeCallback(JSObjectRef callback, JSObjectRef thisObject, size_t argc, const JSValueRef argv[]) {
+Handle<Value> invokeCallback(Handle<Object> callback, Handle<Object> thisObject, size_t argc, const FunctionCallbackInfo<Value>& args) {
+	// JSValueRef exception = NULL;
+	// JSValueRef result = NULL;
+
 	// JSValueRef result = JSObjectCallAsFunction( jsGlobalContext, callback, thisObject, argc, argv, &exception );
 	// logException(exception,jsGlobalContext);
+
+	// TODO an evaluate script above in v8
+	Handle<Value> result;
+
 	return result;
 }
 
@@ -497,9 +511,10 @@ Handle<FunctionTemplate> EJApp::getJSClassForClass(EJBindingBase *classId) {
 		}
 	}
 	// Not already loaded? Ask the objc class for the JSClassRef!
-	if (!jsClass) {
-		jsClass = classId->getJSClass(classId);
-		jsClasses->setObject(new NSValue(jsClass, kJSClassRef), classId->toString());
+	if (jsClass == NULL) {
+		// TODO:
+		// jsClass = classId->getJSClass(classId);
+		// jsClasses->setObject(new NSValue(jsClass, kJSClassRef), classId->toString());
 	}
 	return jsClass;
 }
@@ -596,13 +611,21 @@ void EJApp::touchesMoved(int x, int y) {
 // Timers
 
 
-JSValueRef EJApp::createTimer(JSContextRef ctxp, size_t argc, const JSValueRef argv[],  BOOL repeat) {
+Handle<Value> EJApp::createTimer(size_t argc, const FunctionCallbackInfo<Value>& args,  BOOL repeat) {
+	/*
 	if ( argc != 2 || !JSValueIsObject(ctxp, argv[0]) || !JSValueIsNumber(jsGlobalContext, argv[1]) ) {
 		return NULL;
 	}
+	*/
+	if ( argc != 2 || !args[0]->IsObject() || !args[1]->IsNumber() ) {
+		return Null(jsGlobalIsolate);
+	}
 
-	JSObjectRef func = JSValueToObject(ctxp, argv[0], NULL);
-	float interval = (float)JSValueToNumber(ctxp, argv[1], NULL) * 1000.0f;
+	// JSObjectRef func = JSValueToObject(ctxp, argv[0], NULL);
+	// float interval = (float)JSValueToNumber(ctxp, argv[1], NULL) * 1000.0f;
+
+	Handle<Object> func = Handle<Object>::Cast(args[0]);
+	float interval = (args[1]-> NumberValue()) * 1000.0f;
 
 	// Make sure short intervals (< 18ms) run each frame
 	if ( interval < 0.018 ) {
@@ -610,13 +633,23 @@ JSValueRef EJApp::createTimer(JSContextRef ctxp, size_t argc, const JSValueRef a
 	}
 
 	int timerId = timers->scheduleCallback(func, interval, repeat);
-	return JSValueMakeNumber( ctxp, timerId );
+
+	// return JSValueMakeNumber( ctxp, timerId );
+	return Number::New(jsGlobalIsolate, timerId);
 }
 
-JSValueRef EJApp::deleteTimer(JSContextRef ctxp, size_t argc, const JSValueRef argv[]) {
-	if ( argc != 1 || !JSValueIsNumber(ctxp, argv[0]) ) return NULL;
+// JSValueRef EJApp::deleteTimer(JSContextRef ctxp, size_t argc, const JSValueRef argv[]) {
+Handle<Value> EJApp::deleteTimer(size_t argc, const FunctionCallbackInfo<Value>& args) {
+	// if ( argc != 1 || !JSValueIsNumber(ctxp, argv[0]) ) return NULL;
 
-	timers->cancelId((int)JSValueToNumber(ctxp, argv[0], NULL));
+	if (argc != 1 || !args[0]->IsObject()) {
+		return Null(jsGlobalIsolate);
+	}
+
+	// timers->cancelId((int)JSValueToNumber(ctxp, argv[0], NULL));
+	int id = args[1]-> NumberValue();
+	timers->cancelId(id);
+
 	return NULL;
 }
 

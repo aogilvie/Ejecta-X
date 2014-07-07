@@ -88,8 +88,10 @@ public:
 	void resume(void);
 	void clearCaches(void);
 	NSString * pathForResource(NSString * resourcePath);
-	JSValueRef createTimer(JSContextRef ctx, size_t argc, const JSValueRef argv[], BOOL repeat);
-	JSValueRef deleteTimer(JSContextRef ctx, size_t argc, const JSValueRef argv[]);
+	// JSValueRef createTimer(JSContextRef ctx, size_t argc, const JSValueRef argv[], BOOL repeat);
+	// JSValueRef deleteTimer(JSContextRef ctx, size_t argc, const JSValueRef argv[]);
+	Handle<Value> createTimer(size_t argc, const FunctionCallbackInfo<Value>& args, BOOL repeat);
+	Handle<Value> deleteTimer(size_t argc, const FunctionCallbackInfo<Value>& args);
 
 	// JSClassRef getJSClassForClass(EJBindingBase* classId);
 	Handle<FunctionTemplate> getJSClassForClass(EJBindingBase* classId);
@@ -97,7 +99,8 @@ public:
 	void loadJavaScriptFile(const char *filename);
 	void loadScriptAtPath(NSString *path);
 	// JSValueRef loadModuleWithId(NSString * moduleId, JSValueRef module, JSValueRef exports);
-	JSValueRef invokeCallback(JSObjectRef callback, JSObjectRef thisObject, size_t argc, const JSValueRef argv[]);
+	// JSValueRef invokeCallback(JSObjectRef callback, JSObjectRef thisObject, size_t argc, const JSValueRef argv[]);
+	Handle<Value> invokeCallback(Handle<Object> callback, Handle<Object> thisObject, size_t argc, const FunctionCallbackInfo<Value>& args);
 	void logException(JSValueRef exception, JSContextRef ctxp);
 
 	void touchesBegan(int x, int y);

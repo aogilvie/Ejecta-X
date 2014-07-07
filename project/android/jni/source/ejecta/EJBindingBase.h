@@ -10,6 +10,8 @@
 #include "EJConvert.h"
 #include "EJConvert.h"
 
+#include <v8.h>
+
 extern JSValueRef ej_global_undefined;
 
 // All classes derived from this JS_BaseClass will return a JSClassRef through the 
@@ -25,6 +27,12 @@ extern JSValueRef ej_global_undefined;
 // and gather all function pointers.
 
 // The class method that returns a pointer to the static C callback function
+#define __TP_GET_POINTER_TO(NAME) \
+	SEL _ptr_to##NAME() { \
+		return (SEL)NAME; \
+	} \
+	REFECTION_FUNCTION_IMPLEMENT(_ptr_to##NAME);
+
 #define __EJ_GET_POINTER_TO(NAME) \
 	SEL _ptr_to##NAME() { \
 		return (SEL)NAME; \
@@ -32,7 +40,74 @@ extern JSValueRef ej_global_undefined;
 	REFECTION_FUNCTION_IMPLEMENT(_ptr_to##NAME);
 
 // ------------------------------------------------------------------------------------
+// Function - use with TP_BIND_FUNCTION( functionName, ctx, args ) { ... }
+#define TP_BIND_FUNCTION_DEFINE(NAME, CTX_NAME, ARGS) \
+	Handle<Value> _func_##NAME(Handle<Context> CTX_NAME, const FunctionCallbackInfo<Value>& ARGS)
+
+#define TP_BIND_FUNCTION(CLASS, NAME, ARGS) \
+	\
+	static void _##CLASS##_func_##NAME( \
+		Handle<Context> ctx, \
+		const FunctionCallbackInfo<Value>& args \
+	) { \
+		CLASS *instance = (CLASS *)(JSObjectGetPrivate(object)); \
+		Handle<Value> ret = (Handle<Value>)instance->_func_##NAME(ctx, args); \
+		return ret; \
+	} \
+	/* The actual implementation for this method */ \
+	Handle<Value> CLASS::_func_##NAME(Handle<Context> CTX_NAME, FunctionCallbackInfo<Value>& ARGS)
+
+// ------------------------------------------------------------------------------------
+// Getter - use with TP_BIND_GET( propertyName, ctx ) { ... }
+#define TP_BIND_GET_DEFINE(NAME, CTX_NAME) \
+	Handle<Value> _get_##NAME( Handle<Context> CTX_NAME)
+
+#define TP_BIND_GET(CLASS, NAME, CTX_NAME) \
+ 	\
+ 	/* The C callback function for the exposed getter and class method that returns it */ \
+ 	static Handle<Value> _##CLASS##_get_##NAME( \
+ 		Handle<Context> ctx, \
+ 		Handle<Object> object, \
+ 		String propertyName, \
+ 		Handle<Value> exception \
+ 	) { \
+		CLASS *instance = (CLASS *)(JSObjectGetPrivate(object)); \
+		Handle<Value> ret = (Handle<Value>)instance->_get_##NAME(ctx); \
+		return ret; \
+ 	} \
+ 	__EJ_GET_POINTER_TO(_##CLASS##_get_##NAME)\
+ 	\
+ 	/* The actual implementation for this getter */ \
+ 	Handle<Value> CLASS::_get_##NAME(Handle<Context> CTX_NAME)
+
+// ------------------------------------------------------------------------------------
+// Setter - use with TP_BIND_SET( propertyName, ctx, value ) { ... }
+#define TP_BIND_SET_DEFINE(NAME, CTX_NAME, VALUE_NAME) \
+		void _set_##NAME( Handle<Context> CTX_NAME, Handle<Value> VALUE_NAME)
+
+#define TP_BIND_SET(CLASS, NAME, CTX_NAME, VALUE_NAME) \
+ 	\
+ 	/* The C callback function for the exposed setter and class method that returns it */ \
+ 	static bool _##CLASS##_set_##NAME( \
+ 		Handle<Context> ctx, \
+ 		Handle<Object> object, \
+ 		String propertyName, \
+ 		Handle<Value> value, \
+ 		Handle<Value> exception \
+ 	) { \
+ 		CLASS *instance = (CLASS *)(JSObjectGetPrivate(object)); \
+ 		instance->_set_##NAME(ctx, value); \
+ 		return true; \
+ 	} \
+ 	__TP_GET_POINTER_TO(_##CLASS##_set_##NAME) \
+ 	\
+ 	/* The actual implementation for this setter */ \
+ 	void CLASS::_set_##NAME(Handle<Context> CTX_NAME, Handle<Value> VALUE_NAME)
+
+
+// ------------------------------------------------------------------------------------
 // Function - use with EJ_BIND_FUNCTION( functionName, ctx, argc, argv ) { ... }
+/*
 #define EJ_BIND_FUNCTION_DEFINE(NAME, CTX_NAME, ARGC_NAME, ARGV_NAME) \
 	JSValueRef _func_##NAME(JSContextRef CTX_NAME, size_t ARGC_NAME, const JSValueRef* ARGV_NAME)
 
@@ -52,7 +127,6 @@ extern JSValueRef ej_global_undefined;
 	} \
 	__EJ_GET_POINTER_TO(_##CLASS##_func_##NAME)\
 	\
-	/* The actual implementation for this method */ \
 	JSValueRef CLASS::_func_##NAME(JSContextRef CTX_NAME, size_t ARGC_NAME, const JSValueRef* ARGV_NAME)
 
 // ------------------------------------------------------------------------------------
@@ -62,7 +136,6 @@ extern JSValueRef ej_global_undefined;
 
 #define EJ_BIND_GET(CLASS, NAME, CTX_NAME) \
  	\
- 	/* The C callback function for the exposed getter and class method that returns it */ \
  	static JSValueRef _##CLASS##_get_##NAME( \
  		JSContextRef ctx, \
  		JSObjectRef object, \
@@ -75,17 +148,16 @@ extern JSValueRef ej_global_undefined;
  	} \
  	__EJ_GET_POINTER_TO(_##CLASS##_get_##NAME)\
  	\
- 	/* The actual implementation for this getter */ \
  	JSValueRef CLASS::_get_##NAME(JSContextRef CTX_NAME)
-
+*/
 // ------------------------------------------------------------------------------------
 // Setter - use with EJ_BIND_SET( propertyName, ctx, value ) { ... }
+ 	/*
 #define EJ_BIND_SET_DEFINE(NAME, CTX_NAME, VALUE_NAME) \
 		void _set_##NAME( JSContextRef CTX_NAME,JSValueRef VALUE_NAME)
 
 #define EJ_BIND_SET(CLASS, NAME, CTX_NAME, VALUE_NAME) \
  	\
- 	/* The C callback function for the exposed setter and class method that returns it */ \
  	static bool _##CLASS##_set_##NAME( \
  		JSContextRef ctx, \
  		JSObjectRef object, \
@@ -99,9 +171,8 @@ extern JSValueRef ej_global_undefined;
  	} \
  	__EJ_GET_POINTER_TO(_##CLASS##_set_##NAME) \
  	\
- 	/* The actual implementation for this setter */ \
  	void CLASS::_set_##NAME(JSContextRef CTX_NAME,JSValueRef VALUE_NAME)
-
+*/
 // // ------------------------------------------------------------------------------------
 // // Shorthand to define a function that logs a "not implemented" warning
 //
@@ -202,7 +273,8 @@ public:
 
 	virtual string superclass(){return 0;};
 
-	virtual void initWithContext(JSContextRef ctxp, JSObjectRef obj, size_t argc, const JSValueRef argv[]);
+	// virtual void initWithContext(JSContextRef ctxp, JSObjectRef obj, size_t argc, const JSValueRef argv[]);
+	virtual void initWithContext(Handle<Context> jsGlobalContext, const FunctionCallbackInfo<Value>& args);
 	static JSClassRef getJSClass(EJBindingBase* ej_obj);
 	REFECTION_CLASS_IMPLEMENT_DEFINE(EJBindingBase);
 };
