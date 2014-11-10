@@ -13,10 +13,15 @@ Ejecta is published under the [MIT Open Source License](http://opensource.org/li
 
 1. Install [Android NDK](http://developer.android.com/tools/sdk/ndk/index.html) first.
 2. Install [Android SDK](http://developer.android.com/sdk/index.html) then Eclipse and ADT OR, [Android Studio](http://developer.android.com/sdk/installing/studio.html)
-3. `cd <your project dir>` then run `/path/to/your/android-ndk-r9/ndk-build` to compile libejecta.so and libJavaScriptCore.so
-4. Open in your favourite IDE and build.
+3. Building:
+	- With NDK CLI: `cd project/android/jni/source` then run `/path/to/your/android-ndk-r9/ndk-build` to compile libejecta.so and libJavaScriptCore.so
+	- With Eclipse: Open `project/android/` in Eclipse, change the NDK build phase [1] [2] to point to your NDK path. The C/C++ configuration uses NDK API level 14 and GNU 4.8; you can adapt this to your needs.
+4. Build in your IDE or with ant.
 
-**Note for Windows users:-** 
+![image](build-phase-configuration.png) [1]
+![image](build-phase-configuration-2.png) [2]
+
+**Note for Windows users:-**
 
 Current branches no longer work on Windows after the OpenGLES update. Please use the older release [https://github.com/aogilvie/Ejecta-X/releases/tag/v0.9.9-original](https://github.com/aogilvie/Ejecta-X/releases/tag/v0.9.9-original)
 
@@ -35,18 +40,18 @@ Set an event listener on your activity as follows;
 	((EjectaGLSurfaceView)mGLView).setEjectaEventListener(new EjectaRenderer.EjectaEventListener() {
         @Override
         public void onCanvasCreated() {
-            
+
     	}
 	});
-	
+
 ### Native APIs
 
 **loadJavaScriptFile(String filename)**
 
-Will load a JavaScript file into Ejecta-X. File should be relative from ```assets/build/<filename>```. 
+Will load a JavaScript file into Ejecta-X. File should be relative from ```assets/build/<filename>```.
 
 For example to load a file at ```assets/build/loadme.js``` would be;
-	
+
 	((EjectaGLSurfaceView)mGLView).loadJavaScriptFile("loadme.js")
 
 # Commit to Ejecta-X

@@ -71,6 +71,7 @@ self = window = this;
  HTMLElement = function( tagName ){
  this.tagName = tagName;
  this.children = [];
+ this.style = {};
  };
  
  HTMLElement.prototype.appendChild = function( element ) {
@@ -191,6 +192,7 @@ self = window = this;
  touchEvent.changedTouches = touchEvent.touches;
  
  var publishTouchEvent = function( type, args ) {
+ touchEvent.type = type;
  var touches = touchEvent.touches;
  touches.length = args.length/3;
  
