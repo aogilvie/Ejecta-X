@@ -341,6 +341,19 @@ void EJApp::loadScriptAtPath(NSString *path) {
     JSStringRelease(pathJS);
 }
 
+void EJApp::evaluateScript(const char *script) {
+    // char to NSString
+    string scriptString = string(script);
+    NSString *convertedscript = NSStringMake(scriptString);
+    JSStringRef scriptJS = JSStringCreateWithUTF8CString(convertedscript->getCString());
+
+    JSValueRef exception = NULL;
+	JSEvaluateScript(jsGlobalContext, scriptJS, NULL, NULL, 0, &exception );
+	logException(exception, jsGlobalContext);
+
+    JSStringRelease(scriptJS);
+}
+
 JSValueRef EJApp::loadModuleWithId(NSString *moduleId, JSValueRef module, JSValueRef exports) {
 	NSString *moduleIdFile = NSStringMake(moduleId->getCString() + string(".js"));
 	NSString *scriptPath = pathForResource(moduleIdFile);

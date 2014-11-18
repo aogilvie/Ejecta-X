@@ -92,6 +92,7 @@ public:
     void triggerMessage(const char *message, const char *type);
     void loadJavaScriptFile(const char *filename);
     void loadScriptAtPath(NSString *path);
+    void evaluateScript(const char *script);
     JSValueRef loadModuleWithId(NSString * moduleId, JSValueRef module, JSValueRef exports);
     JSValueRef invokeCallback(JSObjectRef callback, JSObjectRef thisObject, size_t argc, const JSValueRef argv[]);
     void logException(JSValueRef exception, JSContextRef ctxp);

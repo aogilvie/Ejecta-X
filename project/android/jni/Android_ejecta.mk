@@ -80,6 +80,7 @@ LOCAL_SRC_FILES := \
                     source/ejecta/EJUtils/EJBindingHttpRequest.cpp \
                     source/ejecta/EJUtils/EJBindingLocalStorage.cpp \
                     source/ejecta/EJUtils/EJBindingTouchInput.cpp \
+                    source/ejecta/EJUtils/EJBindingWizCanvasMessenger.cpp \
                     ejecta.cpp \
 
 LOCAL_LDLIBS :=  -landroid -lz -llog -lGLESv2 -lGLESv1_CM \
